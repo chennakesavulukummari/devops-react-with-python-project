@@ -18,8 +18,8 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
-
+  region  = var.aws_region
+  profile = "c3"
 
   default_tags {
     tags = {

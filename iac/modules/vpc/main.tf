@@ -210,25 +210,63 @@ resource "aws_route_table" "private" {
 
 # Private Route Table Associations
 # Association for Web Subnets
+
+# resource "aws_route_table_association" "web_private" {
+#   for_each       = aws_subnet.web_private # Assuming this is a map
+#   subnet_id      = each.value.id
+#   route_table_id = aws_route_table.private[each.key].id
+# }
+
 resource "aws_route_table_association" "web_private" {
   count          = length(aws_subnet.web_private)
   subnet_id      = aws_subnet.web_private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  # values() converts the map of route tables into a list so [count.index] works
+  route_table_id = values(aws_route_table.private)[count.index]
 }
 
+# resource "aws_route_table_association" "web_private" {
+#   count          = length(aws_subnet.web_private)
+#   subnet_id      = aws_subnet.web_private[count.index].id
+#   route_table_id = aws_route_table.private[count.index].id
+# }
+
 # Association for App Subnets
+# resource "aws_route_table_association" "app_private" {
+#   for_each       = aws_subnet.app_private # Assuming this is a map
+#   subnet_id      = each.value.id
+#   route_table_id = aws_route_table.private[each.key].id
+# }
+
 resource "aws_route_table_association" "app_private" {
   count          = length(aws_subnet.app_private)
   subnet_id      = aws_subnet.app_private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = values(aws_route_table.private)[count.index]
 }
 
+# resource "aws_route_table_association" "app_private" {
+#   count          = length(aws_subnet.app_private)
+#   subnet_id      = aws_subnet.app_private[count.index].id
+#   route_table_id = aws_route_table.private[count.index].id
+# }
+
 # Association for DB Subnets
+# resource "aws_route_table_association" "db_private" {
+#   for_each       = aws_subnet.db_private # Assuming this is a map
+#   subnet_id      = each.value.id
+#   route_table_id = aws_route_table.private[each.key].id
+# }
+
 resource "aws_route_table_association" "db_private" {
   count          = length(aws_subnet.db_private)
   subnet_id      = aws_subnet.db_private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = values(aws_route_table.private)[count.index]
 }
+
+# resource "aws_route_table_association" "db_private" {
+#   count          = length(aws_subnet.db_private)
+#   subnet_id      = aws_subnet.db_private[count.index].id
+#   route_table_id = aws_route_table.private[count.index].id
+# }
 
 # Network ACLs for security layers
 # Public NACL
@@ -270,78 +308,79 @@ subnet_ids = flatten([
 }
 
 # VPC Flow Logs
-resource "aws_cloudwatch_log_group" "main" {
-  count             = var.enable_flow_logs ? 1 : 0
-  name              = "/aws/vpc/flowlogs/${var.core_infra_name}"
-  retention_in_days = 7
 
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.core_infra_name}-flow-logs"
-    }
-  )
-}
+# resource "aws_cloudwatch_log_group" "main" {
+#   count             = var.enable_flow_logs ? 1 : 0
+#   name              = "/aws/vpc/flowlogs/${var.core_infra_name}"
+#   retention_in_days = 7
 
-resource "aws_iam_role" "flow_logs" {
-  count = var.enable_flow_logs ? 1 : 0
-  name  = "${var.core_infra_name}-flow-logs-role"
+#   tags = merge(
+#     var.tags,
+#     {
+#       Name = "${var.core_infra_name}-flow-logs"
+#     }
+#   )
+# }
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "vpc-flow-logs.amazonaws.com"
-        }
-      }
-    ]
-  })
+# resource "aws_iam_role" "flow_logs" {
+#   count = var.enable_flow_logs ? 1 : 0
+#   name  = "${var.core_infra_name}-flow-logs-role"
 
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.core_infra_name}-flow-logs-role"
-    }
-  )
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Principal = {
+#           Service = "vpc-flow-logs.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
 
-resource "aws_iam_role_policy" "flow_logs" {
-  count = var.enable_flow_logs ? 1 : 0
-  name  = "${var.core_infra_name}-flow-logs-policy"
-  role  = aws_iam_role.flow_logs[0].id
+#   tags = merge(
+#     var.tags,
+#     {
+#       Name = "${var.core_infra_name}-flow-logs-role"
+#     }
+#   )
+# }
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogGroups",
-          "logs:DescribeLogStreams"
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      }
-    ]
-  })
-}
+# resource "aws_iam_role_policy" "flow_logs" {
+#   count = var.enable_flow_logs ? 1 : 0
+#   name  = "${var.core_infra_name}-flow-logs-policy"
+#   role  = aws_iam_role.flow_logs[0].id
 
-resource "aws_flow_log" "main" {
-  count                   = var.enable_flow_logs ? 1 : 0
-  iam_role_arn            = aws_iam_role.flow_logs[0].arn
-  log_destination         = aws_cloudwatch_log_group.main[0].arn
-  traffic_type            = "ALL"
-  vpc_id                  = aws_vpc.main.id
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = [
+#           "logs:CreateLogGroup",
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents",
+#           "logs:DescribeLogGroups",
+#           "logs:DescribeLogStreams"
+#         ]
+#         Effect   = "Allow"
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
 
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.core_infra_name}-vpc-flow-logs"
-    }
-  )
-}
+# resource "aws_flow_log" "main" {
+#   count                   = var.enable_flow_logs ? 1 : 0
+#   iam_role_arn            = aws_iam_role.flow_logs[0].arn
+#   log_destination         = aws_cloudwatch_log_group.main[0].arn
+#   traffic_type            = "ALL"
+#   vpc_id                  = aws_vpc.main.id
+
+#   tags = merge(
+#     var.tags,
+#     {
+#       Name = "${var.core_infra_name}-vpc-flow-logs"
+#     }
+#   )
+# }
