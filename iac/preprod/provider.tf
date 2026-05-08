@@ -13,7 +13,7 @@ terraform {
     region         = "ap-south-2"
     encrypt        = true
     dynamodb_table = "terraform-locks"
-    profile        = "c3"
+    # profile        = "c3"
   }
 }
 
