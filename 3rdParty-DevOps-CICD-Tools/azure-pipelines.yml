@@ -1,0 +1,32 @@
+trigger:
+  - main
+  - live
+
+pool:
+  name: default
+  demands:
+    - Agent.Name -equals cloudbinary
+
+variables:
+  workingDirectory: '$(System.DefaultWorkingDirectory)/iac/preprod'
+
+steps:
+- checkout: self
+
+- script: |
+    terraform version
+    aws --version
+    aws sts get-caller-identity
+  displayName: 'Verify Tools'
+
+- script: |
+    cd $(workingDirectory)
+    terraform init
+    terraform validate
+    terraform plan -out=tfplan
+  displayName: 'Terraform Plan'
+
+- script: |
+    cd $(workingDirectory)
+    terraform apply -auto-approve tfplan 
+  displayName: 'Terraform Apply'
