@@ -7,15 +7,15 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket         = "c3ops-terraform-statefiles"
-    key            = "c3_core_infra_preprod/terraform.tfstate"
-    region         = "ap-south-2"
-    encrypt        = true
-    dynamodb_table = "terraform-locks"
-    # profile        = "c3"
-  }
-}
+#   backend "s3" {
+#     bucket         = "c3ops-terraform-statefiles"
+#     key            = "c3_core_infra_preprod/terraform.tfstate"
+#     region         = "ap-south-2"
+#     encrypt        = true
+#     dynamodb_table = "terraform-locks"
+#     # profile        = "c3"
+#   }
+# }
 
 provider "aws" {
   region  = var.aws_region
