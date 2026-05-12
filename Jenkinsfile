@@ -23,6 +23,7 @@ pipeline {
                 dir('iac/preprod') {
                     sh 'pwd'
                     sh 'ls -lrta'
+                    sh 'terraform init'
                     sh 'terraform plan -out=tfplan'
                 }
             }
