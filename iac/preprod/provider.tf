@@ -6,7 +6,7 @@ terraform {
       version = "~> 5.0"
     }
   }
-
+}
 #   backend "s3" {
 #     bucket         = "c3ops-terraform-statefiles"
 #     key            = "c3_core_infra_preprod/terraform.tfstate"
