@@ -10,9 +10,7 @@ pipeline {
     stages {
         stage('Terraform Init') {
             steps {
-                sh 'pwd'
-                sh 'ls -lrta'
-                sh 'cd iac/preprod'
+                dir('iac/preprod') {
                 sh 'pwd'
                 sh 'ls -lrta'
                 sh 'terraform init'
@@ -22,12 +20,12 @@ pipeline {
             steps {
                 // Use Jenkins Credentials Provider for safety
                 // withCredentials([usernamePassword(credentialsId: 'azure-creds', passwordVariable: 'ARM_CLIENT_SECRET', usernameVariable: 'ARM_CLIENT_ID')]) {
-                    sh 'pwd'
-                    sh 'ls -lrta'
-                    sh 'cd iac/preprod'
-                    sh 'pwd'
-                    sh 'ls -lrta'
-                    sh 'terraform plan -out=tfplan'
+                dir('iac/preprod') {
+                sh 'pwd'
+                sh 'ls -lrta'
+                sh 'terraform plan -out=tfplan'
+            }
+                    
                 }
             }
         }
