@@ -10,33 +10,50 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                dir('iac/preprod') {
-                    sh 'pwd'
-                    sh 'ls -lrta'
-                    sh 'terraform init -reconfigure'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID',     variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'AWS_DEFAULT_REGION',    variable: 'AWS_DEFAULT_REGION')
+                ]) {
+                    dir('iac/preprod') {
+                        sh 'pwd'
+                        sh 'ls -lrta'
+                        sh 'terraform init'
+                    }
                 }
             }
-        }  // ← closes stage('Terraform Init')
+        }
 
         stage('Terraform Plan') {
             steps {
-                dir('iac/preprod') {
-                    sh 'pwd'
-                    sh 'ls -lrta'
-                    sh 'terraform init -reconfigure'
-                    sh 'terraform plan -out=tfplan'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID',     variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'AWS_DEFAULT_REGION',    variable: 'AWS_DEFAULT_REGION')
+                ]) {
+                    dir('iac/preprod') {
+                        sh 'pwd'
+                        sh 'ls -lrta'
+                        sh 'terraform plan -out=tfplan'
+                    }
                 }
             }
-        }  // ← closes stage('Terraform Plan')
+        }
 
         // stage('Terraform Apply') {
         //     steps {
-        //         input message: 'Apply changes?'
-        //         dir('iac/preprod') {
-        //             sh 'terraform apply tfplan'
+        //         input message: 'Approve Apply?'
+        //         withCredentials([
+        //             string(credentialsId: 'AWS_ACCESS_KEY_ID',     variable: 'AWS_ACCESS_KEY_ID'),
+        //             string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY'),
+        //             string(credentialsId: 'AWS_DEFAULT_REGION',    variable: 'AWS_DEFAULT_REGION')
+        //         ]) {
+        //             dir('iac/preprod') {
+        //                 sh 'terraform apply -auto-approve tfplan'
+        //             }
         //         }
         //     }
         // }
 
-    }  // ← closes stages
-}  // ← closes pipeline
+    }  // closes stages
+}  // closes pipeline
